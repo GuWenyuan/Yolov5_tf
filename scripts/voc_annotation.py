@@ -43,9 +43,9 @@ def convert_voc_annotation(data_path, data_type, anno_path, use_difficult_bbox=T
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data_path", default="/home/avBuffer/VoAI/VOC/")
-    parser.add_argument("--train_annotation", default="./imgs/dataset/voc_train.txt")
-    parser.add_argument("--test_annotation",  default="./imgs/dataset/voc_test.txt")
+    parser.add_argument("--data_path", default="/home/devops/datasets/VOC/")
+    parser.add_argument("--train_annotation", default="./data/dataset/voc_train.txt")
+    parser.add_argument("--test_annotation",  default="./data/dataset/voc_test.txt")
     flags = parser.parse_args()
 
     if os.path.exists(flags.train_annotation):
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     if os.path.exists(flags.test_annotation):
         os.remove(flags.test_annotation)
 
-    num1 = convert_voc_annotation(os.path.join(flags.data_path, 'train/VOCdevkit/VOC2007'), 'trainval', flags.train_annotation, False)
-    num2 = convert_voc_annotation(os.path.join(flags.data_path, 'train/VOCdevkit/VOC2012'), 'trainval', flags.train_annotation, False)
-    num3 = convert_voc_annotation(os.path.join(flags.data_path, 'test/VOCdevkit/VOC2007'),  'test', flags.test_annotation, False)
-    print('=> The number of image for train is: %d\tThe number of image for test is:%d' % (num1 + num2, num3))
+    # num1 = convert_voc_annotation(os.path.join(flags.data_path, 'train/VOCdevkit/VOC2007'), 'trainval', flags.train_annotation, False)
+    num2 = convert_voc_annotation(os.path.join(flags.data_path, 'VOCdevkit/VOC2012'), 'trainval', flags.train_annotation, False)
+    # num3 = convert_voc_annotation(os.path.join(flags.data_path, 'test/VOCdevkit/VOC2007'),  'test', flags.test_annotation, False)
+    # print('=> The number of image for train is: %d\tThe number of image for test is:%d' % (num1 + num2, num3))
