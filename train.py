@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+import sys
 import time
 import shutil
 import numpy as np
@@ -245,15 +246,14 @@ class YoloTrain(object):
 
 
 if __name__ == '__main__':
-    """
+
     argv = sys.argv
     if len(argv) < 3:
         print('usage: python train.py gpu_id net_type(yolov5/yolov4/yolov3/tiny)')
         sys.exit()
 
-    """
-    gpu_id = 0 #argv[1]
-    net_type = 'yolov3' #argv[2]
+    gpu_id = argv[1]
+    net_type = argv[2]
     print('train gpu_id=%s, net_type=%s' % (gpu_id, net_type))
 
     os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
