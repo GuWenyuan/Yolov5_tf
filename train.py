@@ -165,7 +165,7 @@ class YoloTrain(object):
         with tf.name_scope('loader_and_saver'):
             # self.loader = tf.train.Saver(self.net_var)
             # self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=1000)
-            self.loader = autodist_saver(self.net_var)
+            # self.loader = autodist_saver(self.net_var)
             self.saver = autodist_saver(tf.global_variables(), max_to_keep=1000)
 
         with tf.name_scope('summary'):
@@ -188,13 +188,17 @@ class YoloTrain(object):
         self.sess = self.autodist.create_distributed_session()
         self.sess.run(init_op)
 
-        try:
-            print('=> Restoring weights from: %s ... ' % self.initial_weight)
-            self.loader.restore(self.sess, self.initial_weight)
-        except:
-            print('=> %s does not exist !!!' % self.initial_weight)
-            print('=> Now it starts to train YOLO-%s from scratch ...' % self.net_type)
-            self.first_stage_epochs = 0
+        # try:
+        #     print('=> Restoring weights from: %s ... ' % self.initial_weight)
+        #     self.loader.restore(self.sess, self.initial_weight)
+        # except:
+        #     print('=> %s does not exist !!!' % self.initial_weight)
+        #     print('=> Now it starts to train YOLO-%s from scratch ...' % self.net_type)
+        #     self.first_stage_epochs = 0
+
+        print('=> %s does not exist !!!' % self.initial_weight)
+        print('=> Now it starts to train YOLO-%s from scratch ...' % self.net_type)
+        self.first_stage_epochs = 0
 
         saving = 0.0
         for epoch in range(1, (1 + self.first_stage_epochs + self.second_stage_epochs)):
