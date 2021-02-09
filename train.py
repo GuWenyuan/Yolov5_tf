@@ -153,14 +153,14 @@ class YoloTrain(object):
                     with tf.control_dependencies([moving_ave]):
                         self.train_op_with_frozen_variables = tf.no_op()
 
-        with tf.name_scope('define_second_stage_train'):
-            second_stage_trainable_var_list = tf.trainable_variables()
-            second_stage_optimizer = tf.train.AdamOptimizer(self.learn_rate).minimize(self.loss, var_list=second_stage_trainable_var_list)
-
-            with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-                with tf.control_dependencies([second_stage_optimizer, global_step_update]):
-                    with tf.control_dependencies([moving_ave]):
-                        self.train_op_with_all_variables = tf.no_op()
+        # with tf.name_scope('define_second_stage_train'):
+        #     second_stage_trainable_var_list = tf.trainable_variables()
+        #     second_stage_optimizer = tf.train.AdamOptimizer(self.learn_rate).minimize(self.loss, var_list=second_stage_trainable_var_list)
+        #
+        #     with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
+        #         with tf.control_dependencies([second_stage_optimizer, global_step_update]):
+        #             with tf.control_dependencies([moving_ave]):
+        #                 self.train_op_with_all_variables = tf.no_op()
 
         with tf.name_scope('loader_and_saver'):
             # self.loader = tf.train.Saver(self.net_var)
