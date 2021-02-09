@@ -134,33 +134,33 @@ class YoloTrain(object):
         with tf.name_scope('define_weight_decay'):
             moving_ave = tf.train.ExponentialMovingAverage(self.moving_ave_decay).apply(tf.trainable_variables())
 
-        with tf.name_scope('define_first_stage_train'):
-            self.first_stage_trainable_var_list = []
-            for var in tf.trainable_variables():
-                var_name = var.op.name
-                var_name_mess = str(var_name).split('/')
-                if net_type == 'tiny':
-                    bboxes = ['conv_mbbox', 'conv_lbbox']
-                else:
-                    bboxes = ['conv_sbbox', 'conv_mbbox', 'conv_lbbox']
-                
-                if var_name_mess[0] in bboxes:
-                    self.first_stage_trainable_var_list.append(var)
-
-            first_stage_optimizer = tf.train.AdamOptimizer(self.learn_rate).minimize(self.loss, var_list=self.first_stage_trainable_var_list)
-            with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-                with tf.control_dependencies([first_stage_optimizer, global_step_update]):
-                    with tf.control_dependencies([moving_ave]):
-                        self.train_op_with_frozen_variables = tf.no_op()
-
-        # with tf.name_scope('define_second_stage_train'):
-        #     second_stage_trainable_var_list = tf.trainable_variables()
-        #     second_stage_optimizer = tf.train.AdamOptimizer(self.learn_rate).minimize(self.loss, var_list=second_stage_trainable_var_list)
+        # with tf.name_scope('define_first_stage_train'):
+        #     self.first_stage_trainable_var_list = []
+        #     for var in tf.trainable_variables():
+        #         var_name = var.op.name
+        #         var_name_mess = str(var_name).split('/')
+        #         if net_type == 'tiny':
+        #             bboxes = ['conv_mbbox', 'conv_lbbox']
+        #         else:
+        #             bboxes = ['conv_sbbox', 'conv_mbbox', 'conv_lbbox']
         #
+        #         if var_name_mess[0] in bboxes:
+        #             self.first_stage_trainable_var_list.append(var)
+        #
+        #     first_stage_optimizer = tf.train.AdamOptimizer(self.learn_rate).minimize(self.loss, var_list=self.first_stage_trainable_var_list)
         #     with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-        #         with tf.control_dependencies([second_stage_optimizer, global_step_update]):
+        #         with tf.control_dependencies([first_stage_optimizer, global_step_update]):
         #             with tf.control_dependencies([moving_ave]):
-        #                 self.train_op_with_all_variables = tf.no_op()
+        #                 self.train_op_with_frozen_variables = tf.no_op()
+
+        with tf.name_scope('define_second_stage_train'):
+            second_stage_trainable_var_list = tf.trainable_variables()
+            second_stage_optimizer = tf.train.AdamOptimizer(self.learn_rate).minimize(self.loss, var_list=second_stage_trainable_var_list)
+
+            with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
+                with tf.control_dependencies([second_stage_optimizer, global_step_update]):
+                    with tf.control_dependencies([moving_ave]):
+                        self.train_op_with_all_variables = tf.no_op()
 
         with tf.name_scope('loader_and_saver'):
             # self.loader = tf.train.Saver(self.net_var)
