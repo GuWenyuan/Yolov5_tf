@@ -15,6 +15,11 @@ from core.yolov5 import YOLOV5
 from core.config import cfg
 
 import tensorflow
+
+from autodist import AutoDist
+from autodist.checkpoint.saver import Saver as autodist_saver
+
+
 print('tensorflow.version=', tensorflow.__version__)
 if tensorflow.__version__.startswith('1.'):
     import tensorflow as tf
@@ -24,7 +29,8 @@ else:
 
 
 class YoloTrain(object):
-    def __init__(self, net_type):
+    def __init__(self, net_type, autodist):
+        self.autodist = autodist
         self.net_type = net_type
         self.anchor_per_scale = cfg.YOLO.ANCHOR_PER_SCALE
         self.classes = utils.read_class_names(cfg.YOLO.CLASSES)
@@ -55,9 +61,9 @@ class YoloTrain(object):
         self.testset = Dataset('test', self.net_type)
         self.steps_per_period = len(self.trainset)
 
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
-        self.sess = tf.Session(config=config)
+        # config = tf.ConfigProto()
+        # config.gpu_options.allow_growth = True
+        # self.sess = tf.Session(config=config)
 
         with tf.name_scope('input'):
             if net_type == 'tiny':
@@ -157,8 +163,10 @@ class YoloTrain(object):
                         self.train_op_with_all_variables = tf.no_op()
 
         with tf.name_scope('loader_and_saver'):
-            self.loader = tf.train.Saver(self.net_var)
-            self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=1000)
+            # self.loader = tf.train.Saver(self.net_var)
+            # self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=1000)
+            self.loader = autodist_saver(self.net_var)
+            self.saver = autodist_saver(tf.global_variables(), max_to_keep=1000)
 
         with tf.name_scope('summary'):
             tf.summary.scalar('learn_rate', self.learn_rate)
@@ -168,11 +176,18 @@ class YoloTrain(object):
             tf.summary.scalar('total_loss', self.loss)
 
             self.write_op = tf.summary.merge_all()
-            self.summary_writer = tf.summary.FileWriter(self.log_path, graph=self.sess.graph)
+            self.summary_writer = tf.summary.FileWriter(
+                self.log_path,
+                graph=tf.get_default_graph()
+            )
 
 
     def train(self):
-        self.sess.run(tf.global_variables_initializer())
+        # self.sess.run(tf.global_variables_initializer())
+        init_op = tf.global_variables_initializer()
+        self.sess = self.autodist.create_distributed_session()
+        self.sess.run(init_op)
+
         try:
             print('=> Restoring weights from: %s ... ' % self.initial_weight)
             self.loader.restore(self.sess, self.initial_weight)
@@ -248,13 +263,17 @@ class YoloTrain(object):
 if __name__ == '__main__':
 
     argv = sys.argv
-    if len(argv) < 3:
-        print('usage: python train.py gpu_id net_type(yolov5/yolov4/yolov3/tiny)')
+    if len(argv) < 2:
+        print('usage: python train.py net_type(yolov5/yolov4/yolov3/tiny)')
         sys.exit()
 
-    gpu_id = argv[1]
-    net_type = argv[2]
-    print('train gpu_id=%s, net_type=%s' % (gpu_id, net_type))
+    # gpu_id = argv[1]
+    net_type = argv[1]
+    # print('train gpu_id=%s, net_type=%s' % (gpu_id, net_type))
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
-    YoloTrain(net_type).train()
+    # os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
+
+    resource_spec_path = os.path.join(os.path.dirname(__file__), 'resource_spec.yml')
+    ad = AutoDist(resource_spec_path)
+    with tf.Graph().as_default(), ad.scope():
+        YoloTrain(net_type, ad).train()
